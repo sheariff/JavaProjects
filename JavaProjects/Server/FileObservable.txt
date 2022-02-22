@@ -1,0 +1,40 @@
+package Server.Folder;
+
+import java.util.Arrays;
+import java.util.Observable;
+
+public class FileObservable extends Observable implements Runnable
+{
+    String[] fileName;
+    String directory;
+    
+    public FileObservable(final String name) {
+        this.directory = name;
+    }
+    
+    @Override
+    public void run() {
+        final FileWatcherInterface fW = (FileWatcherInterface)new FileWatcher(this.directory);
+    Label_0012_Outer:
+        while (true) {
+            while (true) {
+                try {
+                    while (true) {
+                        final String[] temp = fW.ReturnFileNames();
+                        if (!Arrays.equals(this.fileName, temp)) {
+                            this.setChanged();
+                            this.notifyObservers(temp);
+                            this.fileName = temp;
+                        }
+                        Thread.sleep(1000L);
+                    }
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                    continue Label_0012_Outer;
+                }
+                continue;
+            }
+        }
+    }
+}

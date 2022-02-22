@@ -1,0 +1,19 @@
+package Client.Client_Objects;
+
+import javafx.collections.ObservableList;
+import Client.HomeController;
+
+class ClientThread$1 implements Runnable {
+    private final /* synthetic */ String[] val$fileNames;
+    
+    @Override
+    public void run() {
+        final ObservableList<String> temp = (ObservableList<String>)HomeController.homeController.gViewServer();
+        temp.clear();
+        String[] val$fileNames;
+        for (int length = (val$fileNames = this.val$fileNames).length, i = 0; i < length; ++i) {
+            final String each = val$fileNames[i];
+            temp.add((Object)each);
+        }
+    }
+}

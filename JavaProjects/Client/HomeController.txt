@@ -1,0 +1,115 @@
+package Client;
+
+import java.io.File;
+import javafx.scene.Scene;
+import javafx.scene.Node;
+import javafx.stage.Stage;
+import Client.View.MediaViewController;
+import javafx.scene.Parent;
+import javafx.fxml.FXMLLoader;
+import Server.Folder.FileWatcher;
+import java.io.IOException;
+import javafx.event.ActionEvent;
+import Client.Client_Objects.ClientThread;
+import java.util.Observer;
+import Client.Client_Objects.Client;
+import javafx.collections.FXCollections;
+import Client.Folder.FileObservable;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
+import javafx.fxml.FXML;
+import javafx.scene.control.ListView;
+
+public class HomeController
+{
+    @FXML
+    ListView<String> lvLocal;
+    @FXML
+    ListView<String> lvServer;
+    @FXML
+    Button play;
+    @FXML
+    Button download;
+    public static HomeController homeController;
+    private String localDirectory;
+    ObservableList<String> observableListLocal;
+    ObservableList<String> observableListServer;
+    
+    static {
+        HomeController.homeController = null;
+    }
+    
+    public HomeController() {
+        this.localDirectory = "src\\Client\\Client_Folder_1";
+    }
+    
+    @FXML
+    public void initialize() {
+        HomeController.homeController = this;
+        final FileObservable fileObservableLocal = new FileObservable(this.localDirectory);
+        this.observableListLocal = (ObservableList<String>)FXCollections.observableArrayList();
+        final Client clientObservableLocal = new Client((ObservableList)this.observableListLocal);
+        fileObservableLocal.addObserver((Observer)clientObservableLocal);
+        new Thread((Runnable)fileObservableLocal).start();
+        this.observableListServer = (ObservableList<String>)FXCollections.observableArrayList();
+        this.lvLocal.setItems((ObservableList)this.observableListLocal);
+        this.lvServer.setItems((ObservableList)this.observableListServer);
+        this.populateListView();
+    }
+    
+    private void populateListView() {
+        String[] serverContents;
+        for (int length = (serverContents = ClientThread.serverContents).length, i = 0; i < length; ++i) {
+            final String each = serverContents[i];
+            this.lvServer.getItems().add((Object)each);
+        }
+    }
+    
+    public ObservableList<String> gViewServer() {
+        return this.observableListServer;
+    }
+    
+    @FXML
+    public void Download(final ActionEvent e) {
+        final String s = (String)this.lvServer.getSelectionModel().getSelectedItem();
+        final String s2;
+        final Runnable r = () -> {
+            try {
+                ClientThread.clientThread.downloadFile(s2);
+            }
+            catch (IOException d) {
+                d.printStackTrace();
+            }
+            catch (ClassNotFoundException d2) {
+                d2.printStackTrace();
+            }
+            return;
+        };
+        new Thread(r).start();
+    }
+    
+    @FXML
+    public void PlayFile(final ActionEvent e) {
+        final FileWatcher fileWatcherLocal = new FileWatcher(this.localDirectory);
+        final FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(this.getClass().getResource("View\\MediaView.fxml"));
+        Parent root = null;
+        try {
+            root = (Parent)loader.load();
+        }
+        catch (IOException d) {
+            d.printStackTrace();
+        }
+        final MediaViewController returnObject = (MediaViewController)loader.getController();
+        final String item = (String)this.lvLocal.getSelectionModel().getSelectedItem();
+        final File file = fileWatcherLocal.ReturnFileReq(item);
+        System.out.println(file.getName());
+        if (returnObject == null) {
+            System.out.println("NULL");
+        }
+        final Stage primaryStage = (Stage)((Node)e.getSource()).getScene().getWindow();
+        primaryStage.setScene(new Scene(root, 600.0, 400.0));
+        primaryStage.show();
+        returnObject.setFile(file);
+    }
+}

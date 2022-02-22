@@ -1,0 +1,14 @@
+package Server.Folder;
+
+import java.io.File;
+
+public interface FileWatcherInterface
+{
+    void PrintListFiles();
+    
+    String[] ReturnFileNames();
+    
+    File[] ReturnListOfFiles();
+    
+    File ReturnFileReq(final String p0);
+}

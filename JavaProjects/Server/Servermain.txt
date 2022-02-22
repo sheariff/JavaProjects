@@ -1,0 +1,44 @@
+package Server;
+
+import Server.Folder.FileWatcherInterface;
+import java.io.IOException;
+import java.util.Observer;
+import java.net.ServerSocket;
+import Server.Folder.FileWatcher;
+import Server.Folder.FileObservable;
+
+public class ServerMain
+{
+    public static void main(final String[] args) {
+        final int port = 11001;
+        final Client[] threadPool = new Client[10];
+        final FileObservable fileObservables = new FileObservable("src\\Server\\FileFolder");
+        Thread t = null;
+        final FileWatcherInterface fileWatch = (FileWatcherInterface)new FileWatcher("C:\\Users\\Admin\\Documents\\College Documents\\Generic Eclipse Workspace\\SocketsExample\\src\\Server\\FileFolder");
+        fileWatch.PrintListFiles();
+        try {
+            int threadNumber = 0;
+            System.out.println("Starting server");
+            final ServerSocket servSocket = new ServerSocket(port);
+            while (threadNumber < threadPool.length) {
+                if (threadPool[threadNumber] == null) {
+                    threadPool[threadNumber] = new Client(servSocket.accept(), fileWatch);
+                    new Thread((Runnable)threadPool[threadNumber]).start();
+                    fileObservables.addObserver((Observer)threadPool[threadNumber]);
+                    if (t != null) {
+                        continue;
+                    }
+                    t = new Thread((Runnable)fileObservables);
+                    t.start();
+                }
+                else {
+                    ++threadNumber;
+                }
+            }
+            servSocket.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

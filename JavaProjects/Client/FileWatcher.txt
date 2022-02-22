@@ -1,0 +1,80 @@
+package Client.Folder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.CopyOption;
+import java.text.SimpleDateFormat;
+import java.io.File;
+import Server.Folder.FileWatcherInterface;
+
+public class FileWatcher implements FileWatcherInterface
+{
+    private String directoryAddress;
+    private File folder;
+    
+    public FileWatcher(final String directoryName) {
+        this.directoryAddress = null;
+        this.folder = null;
+        this.directoryAddress = directoryName;
+        this.folder = new File(this.directoryAddress);
+        if (!this.folder.isDirectory()) {
+            System.err.println("Address does not exist, creating new folder");
+            this.folder.mkdir();
+        }
+    }
+    
+    public void PrintListFiles() {
+        if (this.folder == null) {
+            return;
+        }
+        final File[] listOfFiles = this.folder.listFiles();
+        File[] array;
+        for (int length = (array = listOfFiles).length, i = 0; i < length; ++i) {
+            final File fileEntry = array[i];
+            System.out.println("File: \t" + fileEntry.getName());
+            System.out.println("Last modified: \t" + new SimpleDateFormat().format(fileEntry.lastModified()));
+        }
+    }
+    
+    public String[] ReturnFileNames() {
+        if (this.folder == null) {
+            System.err.println("Folder not found");
+            return null;
+        }
+        final String[] returnList = new String[this.folder.listFiles().length];
+        for (int i = 0; i < returnList.length; ++i) {
+            returnList[i] = this.folder.listFiles()[i].getName();
+        }
+        return returnList;
+    }
+    
+    public File[] ReturnListOfFiles() {
+        if (this.folder == null) {
+            System.err.println("Folder not found");
+            return null;
+        }
+        return this.folder.listFiles();
+    }
+    
+    public File ReturnFileReq(final String name) {
+        File[] listFiles;
+        for (int length = (listFiles = this.folder.listFiles()).length, i = 0; i < length; ++i) {
+            final File each = listFiles[i];
+            if (each.getName().equals(name)) {
+                return each;
+            }
+        }
+        return null;
+    }
+    
+    public void AddFile(final File src) {
+        final File dest = new File(String.valueOf(this.directoryAddress) + "\\" + src.getName());
+        try {
+            Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,0 +1,126 @@
+package Server;
+
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.io.IOException;
+import java.util.Observable;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.ObjectInputStream;
+import java.io.File;
+import Server.Folder.FileWatcherInterface;
+import java.net.Socket;
+import java.util.Observer;
+
+class Client implements Runnable, Observer
+{
+    private Socket socket;
+    private FileWatcherInterface fileWatch;
+    private File[] listOfFiles;
+    private ObjectInputStream inputStream;
+    private OutputStream os;
+    private ObjectOutputStream out;
+    private String[] listOfNames;
+    private boolean fileChanged;
+    
+    public Client(final Socket socket, final FileWatcherInterface fileWatch) {
+        this.socket = null;
+        this.fileWatch = null;
+        this.listOfFiles = null;
+        this.inputStream = null;
+        this.os = null;
+        this.out = null;
+        this.listOfNames = null;
+        this.fileChanged = false;
+        this.socket = socket;
+        this.fileWatch = fileWatch;
+    }
+    
+    @Override
+    public void update(final Observable o, final Object obj) {
+        this.listOfNames = (String[])obj;
+        this.fileChanged = true;
+        System.out.println("Directory Changed");
+    }
+    
+    @Override
+    public void run() {
+        try {
+            System.out.println("Connection accepted");
+            this.inputStream = new ObjectInputStream(this.socket.getInputStream());
+            int switchVal = 0;
+            this.os = this.socket.getOutputStream();
+            this.out = new ObjectOutputStream(this.os);
+            while (true) {
+                switchVal = this.inputStream.readInt();
+                if (this.fileChanged) {
+                    this.out.writeBoolean(true);
+                    switchVal = 3;
+                    this.fileChanged = false;
+                }
+                else {
+                    this.out.writeBoolean(false);
+                }
+                this.out.flush();
+                switch (switchVal) {
+                    case 1: {
+                        this.sendAllFiles();
+                        continue;
+                    }
+                    case 2: {
+                        System.err.println("Sending One File");
+                        this.sendOneFile();
+                        continue;
+                    }
+                    case 3: {
+                        this.sendListOfFileNames();
+                        continue;
+                    }
+                    default: {
+                        continue;
+                    }
+                }
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e2) {
+            e2.printStackTrace();
+        }
+    }
+    
+    private void sendAllFiles() throws IOException {
+        final File[] temp = this.fileWatch.ReturnListOfFiles();
+        if (!Arrays.equals(temp, this.listOfFiles)) {
+            this.listOfFiles = temp;
+            File[] listOfFiles;
+            for (int length = (listOfFiles = this.listOfFiles).length, i = 0; i < length; ++i) {
+                final File each = listOfFiles[i];
+                this.sendFile(each);
+            }
+        }
+    }
+    
+    private void sendFile(final File each) throws IOException {
+        System.out.println("Send File");
+        this.out.writeObject(each.getName());
+        this.out.flush();
+        final byte[] buffer = Files.readAllBytes(each.toPath());
+        this.out.writeObject(buffer);
+        this.out.flush();
+    }
+    
+    private void sendOneFile() throws IOException, ClassNotFoundException {
+        System.out.println("Waiting for Ojbect String name");
+        final String fileName = (String)this.inputStream.readObject();
+        System.out.println("Received String name");
+        final File fileToGet = this.fileWatch.ReturnFileReq(fileName);
+        this.sendFile(fileToGet);
+    }
+    
+    private void sendListOfFileNames() throws IOException {
+        System.out.println("Sending list of file names");
+        this.out.writeObject(this.fileWatch.ReturnFileNames());
+    }
+}

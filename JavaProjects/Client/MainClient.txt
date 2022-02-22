@@ -1,0 +1,43 @@
+package Client;
+
+import javafx.scene.Scene;
+import java.io.IOException;
+import javafx.scene.Parent;
+import javafx.fxml.FXMLLoader;
+import javafx.stage.Stage;
+import Client.Folder.FileWatcher;
+import Client.Client_Objects.ClientThread;
+import javafx.application.Application;
+
+public class main extends Application
+{
+    protected static ClientThread threadClient;
+    protected static FileWatcher fileWatch;
+    
+    public static void main(final String[] args) {
+        main.fileWatch = new FileWatcher("src\\Client\\Client_Folder_1");
+        final String serverName = "localhost";
+        final int port = 11001;
+        main.threadClient = new ClientThread(port, serverName, main.fileWatch, args);
+        final Thread t = new Thread((Runnable)main.threadClient);
+        t.start();
+        main.threadClient.t = t;
+        launch(args);
+    }
+    
+    public void start(final Stage primaryStage) {
+        final FXMLLoader loader = new FXMLLoader();
+        loader.setLocation(this.getClass().getResource("Home.fxml"));
+        Parent root = null;
+        try {
+            root = (Parent)loader.load();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        primaryStage.setTitle("Media Player");
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setResizable(false);
+        primaryStage.show();
+    }
+}

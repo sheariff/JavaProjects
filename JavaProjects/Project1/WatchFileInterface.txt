@@ -1,0 +1,13 @@
+package Server;
+
+import java.io.IOException;
+import java.io.File;
+
+public interface WatchFileInterface
+{
+    File[] ReturnFiles();
+    
+    File ReturnFile(final String p0);
+    
+    void CopyFile(final File p0) throws IOException;
+}

@@ -1,0 +1,98 @@
+package Server.GUI;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.io.File;
+import Server.WatchFileInterface;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.Media;
+import Server.WatchFile;
+import javafx.event.ActionEvent;
+import java.util.Observer;
+import javafx.collections.ObservableList;
+import Server.FileObserver;
+import Server.FolderObservable;
+import javafx.collections.FXCollections;
+import javafx.application.Platform;
+import javafx.scene.media.MediaView;
+import javafx.scene.control.Button;
+import javafx.fxml.FXML;
+import javafx.scene.control.ListView;
+
+public class MediaController
+{
+    @FXML
+    ListView listViewLocal;
+    @FXML
+    ListView listViewServer;
+    @FXML
+    Button playButton;
+    @FXML
+    Button loadButton;
+    @FXML
+    Button downloadButton;
+    @FXML
+    MediaView mediaView;
+    Boolean playing;
+    private String localPath;
+    private String serverPath;
+    
+    public MediaController() {
+        this.playing = false;
+        this.localPath = "src\\ClientFolder";
+        this.serverPath = "src\\ServerFolder";
+    }
+    
+    @FXML
+    public void initialize() {
+        Platform.runLater(() -> this.addObservers());
+    }
+    
+    public void addObservers() {
+        this.addObservers(this.listViewServer, this.serverPath);
+        this.addObservers(this.listViewLocal, this.localPath);
+    }
+    
+    public void addObservers(final ListView lv, final String path) {
+        final ObservableList<String> ol = (ObservableList<String>)FXCollections.observableArrayList();
+        final FolderObservable watchFile = new FolderObservable(path);
+        final Thread thread = new Thread((Runnable)watchFile);
+        thread.start();
+        final FileObserver fileObserver = new FileObserver((ObservableList)ol);
+        watchFile.addObserver((Observer)fileObserver);
+        lv.setItems((ObservableList)ol);
+    }
+    
+    @FXML
+    public void play(final ActionEvent openPlayer) {
+        if (!this.playing) {
+            this.mediaView.getMediaPlayer().play();
+            this.playing = true;
+            this.playButton.setText("Pause");
+        }
+        else {
+            this.mediaView.getMediaPlayer().pause();
+            this.playing = false;
+            this.playButton.setText("Play");
+        }
+    }
+    
+    @FXML
+    public void load(final ActionEvent back) throws MalformedURLException {
+        final WatchFileInterface watchFile = (WatchFileInterface)new WatchFile(this.localPath);
+        final String name = (String)this.listViewLocal.getSelectionModel().getSelectedItem();
+        final File returnFile = watchFile.ReturnFile(name);
+        final Media media = new Media(returnFile.toURI().toURL().toString());
+        final MediaPlayer mediaPlayer = new MediaPlayer(media);
+        mediaPlayer.setAutoPlay(false);
+        this.mediaView.setMediaPlayer(mediaPlayer);
+    }
+    
+    @FXML
+    public void download(final ActionEvent download) throws IOException {
+        final WatchFileInterface serverWatchFile = (WatchFileInterface)new WatchFile(this.serverPath);
+        final WatchFileInterface localWatchFile = (WatchFileInterface)new WatchFile(this.localPath);
+        final String file = (String)this.listViewServer.getSelectionModel().getSelectedItem();
+        localWatchFile.CopyFile(serverWatchFile.ReturnFile(file));
+    }
+}

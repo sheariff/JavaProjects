@@ -1,0 +1,39 @@
+package Server;
+
+import javafx.application.Platform;
+import java.util.Observable;
+import java.io.File;
+import javafx.collections.ObservableList;
+import java.util.Observer;
+
+public class FileObserver implements Observer
+{
+    ObservableList<String> list;
+    File[] files;
+    
+    public FileObserver(final ObservableList list) {
+        if (list != null) {
+            this.list = (ObservableList<String>)list;
+        }
+        else {
+            System.out.println("Invalid List");
+        }
+    }
+    
+    @Override
+    public void update(final Observable arg0, final Object file) {
+        final File[] files;
+        int length;
+        int i;
+        File each;
+        Platform.runLater(() -> {
+            this.files = (File[])file;
+            this.list.clear();
+            files = this.files;
+            for (length = files.length; i < length; ++i) {
+                each = files[i];
+                this.list.add((Object)each.getName());
+            }
+        });
+    }
+}

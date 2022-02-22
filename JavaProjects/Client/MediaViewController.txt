@@ -1,0 +1,49 @@
+package Client.View;
+
+import javafx.scene.media.MediaPlayer;
+import java.net.MalformedURLException;
+import java.io.File;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaView;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+
+public class MediaViewController
+{
+    @FXML
+    public Button play;
+    @FXML
+    public MediaView mediaView;
+    public Media media;
+    private File file;
+    
+    public void setFile(final File file) {
+        this.file = file;
+        Media media = null;
+        try {
+            media = new Media(file.toURI().toURL().toString());
+        }
+        catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        final MediaPlayer mediaPlayer = new MediaPlayer(media);
+        this.mediaView.setMediaPlayer(mediaPlayer);
+        mediaPlayer.play();
+    }
+    
+    @FXML
+    private void initialize() {
+    }
+    
+    @FXML
+    public void PlayHandler() {
+        if (this.play.getText().equals("Play")) {
+            this.mediaView.getMediaPlayer().play();
+            this.play.setText("Pause");
+        }
+        else {
+            this.mediaView.getMediaPlayer().pause();
+            this.play.setText("Play");
+        }
+    }
+}

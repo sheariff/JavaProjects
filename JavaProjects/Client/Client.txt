@@ -1,0 +1,45 @@
+package Client.Client_Objects;
+
+import javafx.application.Platform;
+import java.util.Observable;
+import javafx.collections.ObservableList;
+import java.util.Observer;
+
+public class Client implements Observer
+{
+    String[] fileName;
+    ObservableList<String> observableList;
+    
+    public Client(final ObservableList<String> list) {
+        this.observableList = list;
+    }
+    
+    @Override
+    public void update(final Observable o, final Object arg) {
+        final String[] fileName;
+        final Object o2;
+        int length;
+        int i;
+        String each;
+        Platform.runLater(() -> {
+            this.setFileName((String[])arg);
+            this.observableList.clear();
+            System.out.println("Update: ");
+            fileName = this.fileName;
+            for (length = o2.length; i < length; ++i) {
+                each = fileName[i];
+                System.out.println(each);
+                this.observableList.add((Object)each);
+            }
+            System.out.println();
+        });
+    }
+    
+    private void setFileName(final String[] val) {
+        this.fileName = val;
+    }
+    
+    public String[] getFileName() {
+        return this.fileName;
+    }
+}
